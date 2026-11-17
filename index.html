@@ -276,7 +276,9 @@ const S = {
   sheetEleve: null, ready: { config: false, classes: false }, pending: false,
   impC: "", impT: ""
 };
-const isRef = () => S.me && norm(S.me.prenom) === norm(S.settings.referent);
+const refList = () => String(S.settings.referent || "").split(/[,;\/]| et /).map(norm).filter(Boolean);
+const isRefName = p => refList().includes(norm(p));
+const isRef = () => S.me && isRefName(S.me.prenom);
 const sortie = () => S.settings.sorties.find(s => s.id === S.sortieId) || S.settings.sorties[0];
 const classList = () => Object.keys(S.classes).sort();
 const eleves = cl => S.classes[cl] || [];
@@ -411,7 +413,7 @@ function navbar() {
 function noClass() {
   if (!S.ready.classes) return `<p class="empty">Chargement des classes…</p>`;
   return `<div class="empty"><div style="font-size:34px">📋</div><p>Aucune liste de classe pour l'instant.</p>
-    <p class="mut">${isRef() ? "Importez les listes dans Réglages." : `Le référent (${esc(S.settings.referent)}) doit importer les listes dans Réglages.`}</p>
+    <p class="mut">${isRef() ? "Importez les listes dans Réglages." : `Le ou les référents (${esc(S.settings.referent)}) doit importer les listes dans Réglages.`}</p>
     ${isRef() ? `<button class="btn acc" data-a="tab" data-v="reglages">Aller aux réglages</button>` : ""}</div>`;
 }
 
@@ -588,11 +590,11 @@ function vReglages() {
     <div class="btns"><button class="btn acc" data-a="share">📤 Inviter un collègue</button><button class="btn" data-a="logout">Changer de prénom</button></div>
   </section>
   <section class="card"><h3>Enseignants connectés</h3>
-    ${profs.length ? `<div class="pchips">${profs.map(p => `<span class="pchip ${new Date(p.ts).toDateString() === today ? "now" : ""}">${esc(p.prenom)}${norm(p.prenom) === norm(st.referent) ? " ⭐" : ""} <span class="mut">${new Date(p.ts).toDateString() === today ? hm(p.ts) : fmtD(new Date(p.ts).toISOString().slice(0, 10))}</span></span>`).join("")}</div>` : `<p class="mut">Personne pour l'instant.</p>`}
+    ${profs.length ? `<div class="pchips">${profs.map(p => `<span class="pchip ${new Date(p.ts).toDateString() === today ? "now" : ""}">${esc(p.prenom)}${isRefName(p.prenom) ? " ⭐" : ""} <span class="mut">${new Date(p.ts).toDateString() === today ? hm(p.ts) : fmtD(new Date(p.ts).toISOString().slice(0, 10))}</span></span>`).join("")}</div>` : `<p class="mut">Personne pour l'instant.</p>`}
     <p class="mut" style="margin-bottom:0">Contour vert = connecté aujourd'hui.</p>
   </section>
   <section class="card"><h3>Barème des actions</h3>
-    ${r ? `<p class="mut" style="margin-top:0">Les modifications s'appliquent aux prochaines notes. Les notes déjà données gardent leurs points.</p>` : `<p class="warn">Seul le référent (${esc(st.referent)}) peut modifier le barème.</p>`}
+    ${r ? `<p class="mut" style="margin-top:0">Les modifications s'appliquent aux prochaines notes. Les notes déjà données gardent leurs points.</p>` : `<p class="warn">Seuls les référents (${esc(st.referent)}) peuvent modifier le barème.</p>`}
     <h4 class="tp">Bonus</h4>${st.actions.filter(a => a.type === "+").map(aRow).join("")}
     ${r ? `<button class="btn sm" data-a="aAdd" data-v="+">+ Ajouter un bonus</button>` : ""}
     <h4 class="tm">Malus</h4>${st.actions.filter(a => a.type === "-").map(aRow).join("")}
@@ -615,9 +617,10 @@ function vReglages() {
       <textarea id="impT" data-in="impT" rows="5" placeholder="ALIOUAT&#9;Léhana&#10;AUDIC&#9;Valentine&#10;…">${esc(S.impT)}</textarea>
       <div class="btns"><button class="btn acc" data-a="import">Importer la liste</button></div>` : ""}
   </section>
-  <section class="card"><h3>Enseignant référent</h3>
-    <input data-c="ref" value="${esc(st.referent)}" ${dis}>
-    <p class="mut" style="margin-bottom:0">Le référent peut modifier le barème, les sorties, les listes, et supprimer n'importe quelle note.</p>
+  <section class="card"><h3>Enseignants référents</h3>
+    <input data-c="ref" value="${esc(st.referent)}" placeholder="ex. Emile, Floé" ${dis}>
+    <p class="mut" style="margin:6px 0 0">Plusieurs prénoms possibles, séparés par des virgules.</p>
+    <p class="mut" style="margin-bottom:0">Les référents peuvent modifier le barème, les sorties, les listes, et supprimer n'importe quelle note.</p>
   </section>
   ${DEMO ? `<section class="card"><h3>Démo</h3><button class="btn danger" data-a="demoReset">Effacer toutes les données de démo</button></section>` : ""}
   <p class="mut" style="text-align:center">Échappées · Collège au cinéma 2026-2027</p>`;
@@ -733,7 +736,10 @@ document.addEventListener("change", e => {
   if (c === "aLabel") { const a = st.actions.find(x => x.id === v); if (a && t.value.trim()) a.label = t.value.trim(); }
   if (c === "sTitre" && t.value.trim()) st.sorties[+v].titre = t.value.trim();
   if (c === "sDate" && t.value) st.sorties[+v].date = t.value;
-  if (c === "ref" && t.value.trim()) st.referent = t.value.trim();
+  if (c === "ref" && t.value.trim()) {
+    st.referent = t.value.trim();
+    if (!isRef()) { st.referent += ", " + S.me.prenom; t.value = st.referent; saveSettings(); return toast("Votre prénom est gardé dans la liste pour ne pas perdre l'accès."); }
+  }
   saveSettings(); toast("Enregistré ✓");
 });
 document.addEventListener("input", e => { const k = e.target.dataset.in; if (k) S[k] = e.target.value; });
