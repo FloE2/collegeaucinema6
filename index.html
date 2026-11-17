@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1014">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Échappées">
+<title>Échappées · Sorties cinéma 6e</title>
+<style>
+:root{--bg:#0e1014;--card:#181b22;--card2:#232731;--line:#2b303b;--tx:#ece9e4;--mut:#9399a5;--ok:#35b37e;--ko:#e5534b;--acc:#f2b84b;--okbg:rgba(53,179,126,.13);--kobg:rgba(229,83,75,.13)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+button:disabled{opacity:.4;cursor:default}
+input,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
+input:disabled{opacity:.6}
+input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+h3{margin:0 0 10px;font-size:16px}h4{margin:14px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.mut{color:var(--mut);font-size:13px}.tp{color:var(--ok)}.tm{color:var(--ko)}
+/* header */
+header{position:sticky;top:0;z-index:5;background:rgba(14,16,20,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;border-bottom:1px solid var(--line)}
+.top{display:flex;justify-content:space-between;align-items:center}
+.brand{font-weight:800;letter-spacing:.02em}.brand small{color:var(--acc);font-weight:700;margin-left:4px}
+.who{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:6px}
+.demo{background:var(--acc);color:#1a1404;font-size:10px;font-weight:800;padding:2px 6px;border-radius:5px}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-top:8px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:6px 11px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;white-space:nowrap}
+.chip span{opacity:.65;font-size:12px;margin-left:3px}
+.chip.on{background:var(--acc);color:#1a1404;border-color:var(--acc);font-weight:700}
+.seg{display:flex;background:var(--card);border-radius:10px;padding:3px;margin-top:8px;gap:3px}
+.seg button{flex:1;padding:8px 4px;border-radius:8px;font-weight:700;color:var(--mut)}
+.seg button.on{background:var(--card2);color:var(--tx);box-shadow:inset 0 0 0 1px var(--line)}
+main{padding:12px 12px calc(90px + env(safe-area-inset-bottom));max-width:820px;margin:0 auto}
+/* nav */
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#111419;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav button{flex:1;padding:9px 0 8px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:600}
+nav button .i{font-size:21px;line-height:1}
+nav button.on{color:var(--acc)}
+/* grille élèves */
+.hint{display:flex;justify-content:space-between;align-items:center;margin:0 2px 10px;font-size:13px;color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(5,1fr)}}
+.st{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 5px 9px;text-align:center;min-height:60px;min-width:0}
+.st:active{transform:scale(.96);background:var(--card2)}
+.st b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st small{display:block;font-size:10px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;letter-spacing:.02em}
+.sc{font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;display:inline-block}
+.st .sc{position:absolute;top:-6px;right:-3px}
+.pos{background:var(--ok);color:#04150d}.neg{background:var(--ko);color:#fff}.zer{background:var(--card2);color:var(--mut)}
+.st.abs{opacity:.3}
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:20;display:none}
+#sheet.open{display:block}
+.sbg{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.spn{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow:auto;background:var(--card);border-radius:18px 18px 0 0;padding:12px 12px calc(16px + env(safe-area-inset-bottom));animation:up .16s ease-out;max-width:820px;margin:0 auto}
+@keyframes up{from{transform:translateY(25%);opacity:.4}}
+.shh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.shh .nm{font-size:19px;font-weight:800}.shh .nm span{font-weight:500;font-size:13px;color:var(--mut);text-transform:uppercase}
+.shh .x{margin-left:auto;width:38px;height:38px;border-radius:50%;background:var(--card2);font-size:16px;flex:0 0 auto}
+.sc.big{font-size:15px;padding:3px 10px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ch{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin:0 2px 2px}
+.ab{display:flex;justify-content:space-between;align-items:center;gap:6px;text-align:left;padding:10px 10px;border-radius:11px;font-size:14px;min-height:50px;line-height:1.2}
+.ab:active{transform:scale(.97)}
+.ab.p{background:var(--okbg);border:1px solid rgba(53,179,126,.38)}
+.ab.m{background:var(--kobg);border:1px solid rgba(229,83,75,.38)}
+.ab .pt{font-weight:900;flex:0 0 auto;font-size:15px}
+.ab.p .pt{color:var(--ok)}.ab.m .pt{color:var(--ko)}
+.hist{margin-top:16px;border-top:1px solid var(--line);padding-top:10px}
+.hr{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid var(--line)}
+.hr:last-child{border:0}
+.hr .v{font-weight:900;width:30px;text-align:center}
+.hr .hl{flex:1;min-width:0}.hr .hl small{display:block;color:var(--mut);font-size:12px}
+.del{width:36px;height:36px;border-radius:9px;background:var(--card2);flex:0 0 auto}
+/* toast */
+#toast{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:30;background:#f4f1ea;color:#16181d;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;transform:translateY(10px);transition:.18s;max-width:796px;margin:0 auto}
+#toast.show{opacity:1;pointer-events:auto;transform:none}
+#toast button{color:#b45309;font-weight:900;text-transform:uppercase;font-size:13px;padding:6px 4px;flex:0 0 auto}
+/* appel */
+.stats{display:flex;gap:6px;margin:10px 0}
+.stat{flex:1;background:var(--card);border-radius:11px;padding:8px 4px;text-align:center;font-size:12px;color:var(--mut);border:1px solid var(--line)}
+.stat b{display:block;font-size:22px;color:var(--tx)}
+.stat.okc b{color:var(--ok)}.stat.koc b{color:var(--ko)}
+.toggle{display:block;width:100%;text-align:left;padding:8px 4px;font-size:14px;color:var(--mut);margin-bottom:6px}
+.toggle.on{color:var(--acc)}
+.row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 6px 6px 0;margin-bottom:6px}
+.row .n{flex:1;min-width:0;text-align:left;padding:4px 0 4px 12px;align-self:stretch}
+.row .n b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .n b span{font-weight:500;color:var(--mut);font-size:12px}
+.row .n small{display:block;color:var(--mut);font-size:12px;margin-top:1px}
+.pb{width:54px;height:46px;border-radius:10px;font-size:21px;font-weight:900;background:var(--card2);color:var(--mut);flex:0 0 auto}
+.pb.ok.on{background:var(--ok);color:#04150d}
+.pb.ko.on{background:var(--ko);color:#fff}
+.row.present{border-color:rgba(53,179,126,.55)}
+.row.absent{border-color:rgba(229,83,75,.55)}
+.tag{display:inline-block;font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px;background:var(--kobg);color:var(--ko);margin-left:4px;vertical-align:middle}
+/* bilan */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.btbl{width:100%;border-collapse:collapse;font-size:14px}
+.btbl th{font-size:11px;text-transform:uppercase;color:var(--mut);font-weight:700;text-align:right;padding:6px 4px;letter-spacing:.04em}
+.btbl th:first-child{text-align:left}
+.btbl td{padding:9px 4px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.btbl td:first-child{text-align:left;white-space:normal}
+.btbl td:first-child small{color:var(--mut);font-size:11px;text-transform:uppercase}
+.btbl tr.r{cursor:pointer}
+.btbl td.t{font-weight:900}
+.btbl tr.det td{background:var(--bg);font-size:13px;text-align:left;white-space:normal;color:var(--mut)}
+.det div{padding:3px 0}.det b{color:var(--tx)}
+.kpis{display:flex;gap:6px;margin-bottom:10px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{padding:11px 14px;border-radius:10px;background:var(--card2);font-weight:700;font-size:14px;border:1px solid var(--line)}
+.btn.acc{background:var(--acc);color:#1a1404;border-color:var(--acc)}
+.btn.danger{color:var(--ko)}
+.btn.sm{padding:8px 12px;font-size:13px;margin-top:4px}
+.btn.wide{width:100%}
+/* réglages */
+.arow{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.arow input{flex:1;min-width:0}
+.step{display:flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:9px;flex:0 0 auto}
+.step button{width:34px;height:38px;font-size:18px;font-weight:800}
+.step b{min-width:22px;text-align:center}
+.frow{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.frow>span{width:18px;color:var(--mut);font-weight:800}
+.frow input[type=date]{flex:0 0 150px}
+.warn{background:rgba(242,184,75,.12);color:var(--acc);padding:8px 10px;border-radius:9px;font-size:13px}
+.pchips{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{background:var(--card2);border-radius:999px;padding:5px 10px;font-size:13px}
+.pchip.now{box-shadow:inset 0 0 0 1px var(--ok)}
+.empty{text-align:center;color:var(--mut);padding:30px 10px}
+/* login */
+.login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px;max-width:420px;margin:0 auto}
+.login h1{font-size:30px;margin:0}.login h1 span{color:var(--acc)}
+.login p{color:var(--mut);margin:6px 0 18px}
+.netwarn{background:rgba(242,184,75,.14);border:1px solid rgba(242,184,75,.5);color:var(--tx);padding:12px;border-radius:12px;font-size:14px;line-height:1.45}
+.netwarn b{color:var(--acc)}
+.daywarn{background:rgba(242,184,75,.12);color:var(--acc);font-size:12.5px;padding:7px 10px;border-radius:9px;margin-bottom:10px}
+.com{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.com textarea{resize:vertical;min-height:52px}
+.n20{font-size:13px;color:var(--mut);margin-left:6px;white-space:nowrap}.n20 b{font-size:16px;color:var(--tx)}
+.login label{display:block;font-size:13px;color:var(--mut);margin:14px 0 6px}
+.login input{font-size:18px;padding:14px}
+.login .btn{margin-top:22px;padding:15px;font-size:17px}
+.loading{min-height:80vh;display:flex;align-items:center;justify-content:center;color:var(--mut);flex-direction:column;gap:14px;text-align:center;padding:20px}
+#dlg{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:20px}
+#dlg.open{display:flex}
+.dbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;width:100%;max-width:380px}
+.dbox p{margin:0 0 12px;line-height:1.45}
+.net{position:fixed;top:calc(env(safe-area-inset-top) + 6px);left:50%;transform:translateX(-50%);z-index:40;background:var(--ko);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;display:none}
+.net.show{display:block}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet"></div>
+<div id="dlg"></div>
+<div id="toast"><span id="tmsg"></span><button id="tbtn"></button></div>
+<div class="net" id="net">Hors ligne · les notes seront envoyées au retour du réseau</div>
+
+<script type="module">
+/* =====================================================================
+   CONFIGURATION FIREBASE
+   Collez ici la configuration de votre projet (Console Firebase >
+   Paramètres du projet > Vos applications > Config). Tant que apiKey
+   est vide, l'application tourne en MODE DÉMO (données sur l'appareil).
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDOZWVNsHPcMv3eG2IKoip5mhIznXpnzhM",
+  authDomain: "collegeaucinema-29bf0.firebaseapp.com",
+  projectId: "collegeaucinema-29bf0",
+  storageBucket: "collegeaucinema-29bf0.firebasestorage.app",
+  messagingSenderId: "650116073083",
+  appId: "1:650116073083:web:5bd73480ce36d85fe244de"
+};
+const DEMO = !FIREBASE_CONFIG.apiKey;
+
+/* --------- Valeurs par défaut (modifiables ensuite dans Réglages) --------- */
+const DEFAULT_SETTINGS = {
+  referent: "Emile",
+  note20: { base: 15, coef: 1 },
+  sorties: [
+    { id: "s1", titre: "Flow", date: "2026-11-30" },
+    { id: "s2", titre: "Le petit fugitif", date: "2027-02-01" },
+    { id: "s3", titre: "Moonrise Kingdom", date: "2027-05-31" }
+  ],
+  actions: [
+    { id: "b1", type: "+", label: "Comportement exemplaire", pts: 2 },
+    { id: "b2", type: "+", label: "Très attentif pendant le film", pts: 1 },
+    { id: "b3", type: "+", label: "Poli et respectueux", pts: 1 },
+    { id: "b4", type: "+", label: "Reste groupé, sérieux sur le trajet", pts: 1 },
+    { id: "b5", type: "+", label: "Aide un camarade", pts: 1 },
+    { id: "b6", type: "+", label: "Participe au débat après le film", pts: 1 },
+    { id: "m1", type: "-", label: "Bavardage pendant la séance", pts: 1 },
+    { id: "m2", type: "-", label: "Sort son téléphone", pts: 2 },
+    { id: "m3", type: "-", label: "Mange / boit / chewing-gum", pts: 1 },
+    { id: "m4", type: "-", label: "Pieds sur les fauteuils", pts: 1 },
+    { id: "m5", type: "-", label: "Se lève sans autorisation", pts: 1 },
+    { id: "m6", type: "-", label: "Ne reste pas groupé / traverse seul", pts: 2 },
+    { id: "m7", type: "-", label: "Impolitesse, manque de respect", pts: 2 },
+    { id: "m8", type: "-", label: "Ne respecte pas le placement", pts: 1 }
+  ]
+};
+const CHECKPOINTS = [["aller", "🚶 Aller"], ["cinema", "🎬 Salle"], ["retour", "🏫 Retour"]];
+
+/* ----------------------------- utilitaires ----------------------------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+const slug = s => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const uid8 = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const sgn = n => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n);
+const cls = n => (n > 0 ? "pos" : n < 0 ? "neg" : "zer");
+const hm = ts => new Date(ts).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const fmtD = d => d ? new Date(d + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "";
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const clone = o => JSON.parse(JSON.stringify(o));
+
+/* ------------------------------ stockage -------------------------------
+   Même interface pour le mode démo (localStorage) et Firebase :
+   watch(collection, cb), add, set (fusion), del                         */
+function LocalStore() {
+  const mem = {}, subs = {};
+  const key = c => "cac_demo_" + c;
+  const read = c => { try { return JSON.parse(localStorage.getItem(key(c)) || "{}"); } catch (e) { return mem[c] || {}; } };
+  const write = (c, o) => { mem[c] = o; try { localStorage.setItem(key(c), JSON.stringify(o)); } catch (e) {} emit(c); };
+  const emit = c => { const o = read(c); const arr = Object.entries(o).map(([id, d]) => ({ id, ...d })); (subs[c] || []).forEach(f => f(arr, false)); };
+  addEventListener("storage", e => { if (e.key && e.key.startsWith("cac_demo_")) emit(e.key.slice(9)); });
+  let id = LS.get("cac_demo_uid", null); if (!id) { id = "local-" + uid8(); LS.set("cac_demo_uid", id); }
+  return {
+    uid: id,
+    watch(c, f) { (subs[c] = subs[c] || []).push(f); setTimeout(() => emit(c)); },
+    async add(c, d) { const i = uid8(); const o = read(c); o[i] = d; write(c, o); return i; },
+    async set(c, i, d) { const o = read(c); o[i] = { ...(o[i] || {}), ...d }; write(c, o); },
+    async del(c, i) { const o = read(c); delete o[i]; write(c, o); },
+    reset() { ["config", "events", "appel", "profs", "classes"].forEach(c => { try { localStorage.removeItem(key(c)); } catch (e) {} delete mem[c]; }); }
+  };
+}
+
+async function FireStore(code) {
+  const B = "https://www.gstatic.com/firebasejs/10.12.2/";
+  const [A, AU, F] = await Promise.all([import(B + "firebase-app.js"), import(B + "firebase-auth.js"), import(B + "firebase-firestore.js")]);
+  const app = A.initializeApp(FIREBASE_CONFIG);
+  const auth = AU.getAuth(app);
+  const existing = await new Promise(res => { const un = AU.onAuthStateChanged(auth, u => { un(); res(u); }); });
+  const user = existing || (await AU.signInAnonymously(auth)).user;
+  let db;
+  try { db = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) }); }
+  catch (e) { db = F.getFirestore(app); }
+  const col = c => F.collection(db, "espaces", code, c);
+  const fail = e => { console.error(e); toast("⚠️ Erreur d'enregistrement : " + (e.code || e.message)); };
+  return {
+    uid: user.uid,
+    watch(c, f) {
+      return F.onSnapshot(col(c), { includeMetadataChanges: false },
+        s => f(s.docs.map(d => ({ id: d.id, ...d.data() })), s.metadata.fromCache),
+        e => { console.error(e); toast("⚠️ Synchro impossible (" + e.code + "). Vérifiez le code d'équipe."); });
+    },
+    // pas de "await" sur l'écriture : elle s'affiche tout de suite et part dès que le réseau revient
+    async add(c, d) { const r = F.doc(col(c)); F.setDoc(r, d).catch(fail); return r.id; },
+    async set(c, i, d) { F.setDoc(F.doc(col(c), i), d, { merge: true }).catch(fail); },
+    async del(c, i) { F.deleteDoc(F.doc(col(c), i)).catch(fail); }
+  };
+}
+
+/* -------------------------------- état --------------------------------- */
+const S = {
+  me: LS.get("cac_me", null), store: null,
+  tab: "noter", classe: LS.get("cac_classe", "6A"), sortieId: null,
+  checkpoint: "aller", onlyLeft: false, bilanScope: "sortie", bilanSort: "nom", expanded: null,
+  settings: clone(DEFAULT_SETTINGS), classes: {}, events: [], appel: {}, profs: [],
+  sheetEleve: null, ready: { config: false, classes: false }, pending: false,
+  impC: "", impT: ""
+};
+const isRef = () => S.me && norm(S.me.prenom) === norm(S.settings.referent);
+const sortie = () => S.settings.sorties.find(s => s.id === S.sortieId) || S.settings.sorties[0];
+const classList = () => Object.keys(S.classes).sort();
+const eleves = cl => S.classes[cl] || [];
+const eleveById = id => { for (const cl in S.classes) { const e = S.classes[cl].find(x => x.id === id); if (e) return e; } };
+const appelRec = (sid, cp, eid) => S.appel[`${sid}_${cp}_${eid}`];
+const canDel = ev => ev.uid === S.me.uid || isRef();
+function pickSortie() {
+  const today = new Date().toISOString().slice(0, 10);
+  const ss = S.settings.sorties;
+  return (ss.find(s => s.date >= today) || ss[ss.length - 1]).id;
+}
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const isNote = e => e.kind !== "comment";
+/* note sur 20 d'un élève pour une sortie : départ + points × valeur, bornée 0–20 ; null si absent */
+function note20(eid, sid) {
+  if (appelRec(sid, "aller", eid)?.statut === "absent") return null;
+  const n = S.settings.note20 || DEFAULT_SETTINGS.note20;
+  const pts = S.events.reduce((a, e) => a + (e.eleveId === eid && e.sortieId === sid && isNote(e) ? e.pts : 0), 0);
+  return Math.max(0, Math.min(20, Math.round((n.base + n.coef * pts) * 2) / 2));
+}
+const sortieFaite = s => s.date <= todayISO() || S.events.some(e => e.sortieId === s.id);
+const f20 = v => v == null ? "ABS" : String(v).replace(".", ",");
+const c20 = v => v == null ? "mut" : v >= 14 ? "tp" : v < 10 ? "tm" : "";
+function moyenne(eid) {
+  const v = S.settings.sorties.filter(sortieFaite).map(s => note20(eid, s.id)).filter(x => x != null);
+  return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length * 10) / 10 : null;
+}
+function scoreMap(filter) {
+  const m = {};
+  for (const e of S.events) {
+    if (!filter(e)) continue;
+    const r = m[e.eleveId] = m[e.eleveId] || { plus: 0, minus: 0, nP: 0, nM: 0, nC: 0, bySortie: {} };
+    if (e.kind === "comment") { r.nC++; continue; }
+    if (e.pts > 0) { r.plus += e.pts; r.nP++; } else { r.minus += e.pts; r.nM++; }
+    r.bySortie[e.sortieId] = (r.bySortie[e.sortieId] || 0) + e.pts;
+  }
+  return m;
+}
+
+/* ----------------------------- démarrage ------------------------------- */
+function hashCode() { const m = location.hash.match(/[#&]k=([^&]+)/); return m ? decodeURIComponent(m[1]) : null; }
+
+function renderLogin(err) {
+  const hk = hashCode();
+  $("#app").innerHTML = `<form class="login" id="lf">
+    <div style="font-size:42px">🎬</div>
+    <h1>Échappées <span>6e</span></h1>
+    <p>Collège au cinéma · suivi des sorties 6A / 6B</p>
+    <div class="netwarn">📶 <b>Ouvrez l'appli avec du réseau, avant d'entrer dans la salle de cinéma.</b><br>Dans la salle, le réseau est souvent absent : vos notes y seront gardées sur le téléphone puis envoyées dès que le réseau revient. Ne fermez pas l'appli avant.</div>
+    ${DEMO ? `<div class="warn" style="margin-top:10px">Mode démo : les données restent sur ce téléphone. Élèves fictifs.</div>` : ""}
+    <label for="pn">Votre prénom</label>
+    <input id="pn" autocomplete="given-name" autocapitalize="words" placeholder="ex. Emile" value="${esc(S.me?.prenom || "")}" required>
+    ${!DEMO && !hk ? `<label for="cd">Code d'équipe (donné par le référent)</label><input id="cd" autocapitalize="none" autocomplete="off" value="${esc(S.me?.code || "")}" required minlength="12">` : ""}
+    ${err ? `<p style="color:var(--ko)">${esc(err)}</p>` : ""}
+    <button class="btn acc" type="submit">Entrer</button>
+  </form>`;
+  $("#lf").onsubmit = e => {
+    e.preventDefault();
+    let p = $("#pn").value.trim(); if (!p) return;
+    p = p.charAt(0).toUpperCase() + p.slice(1);
+    const code = DEMO ? "demo" : (hk || $("#cd").value.trim());
+    if (!DEMO && code.length < 12) return renderLogin("Le code d'équipe doit faire au moins 12 caractères.");
+    S.me = { prenom: p, code };
+    LS.set("cac_me", S.me);
+    start();
+  };
+}
+
+async function start() {
+  $("#app").innerHTML = `<div class="loading"><div style="font-size:40px">🎬</div>Connexion…</div>`;
+  try { S.store = DEMO ? LocalStore() : await FireStore(S.me.code); }
+  catch (e) {
+    console.error(e);
+    $("#app").innerHTML = `<div class="loading"><div style="font-size:40px">📡</div><b>Connexion impossible</b><span class="mut">${esc(e.code || e.message)}<br>À la toute première ouverture, il faut du réseau.</span><button class="btn acc" onclick="location.reload()">Réessayer</button></div>`;
+    return;
+  }
+  S.me.uid = S.store.uid; LS.set("cac_me", S.me);
+  if (DEMO) seedDemo();
+  S.store.watch("config", (docs, fromCache) => {
+    const d = docs.find(x => x.id === "settings");
+    if (d) S.settings = { ...clone(DEFAULT_SETTINGS), ...d };
+    else if (!fromCache) S.store.set("config", "settings", clone(DEFAULT_SETTINGS));
+    if (!S.sortieId || !S.settings.sorties.some(s => s.id === S.sortieId)) { S.sortieId = pickSortie(); presence(); }
+    S.ready.config = true; render(); renderSheet();
+  });
+  S.store.watch("classes", docs => {
+    const c = {};
+    docs.forEach(d => { c[d.id] = (d.eleves || []).map(e => ({ ...e, classe: d.id })); });
+    S.classes = c;
+    if (!c[S.classe] && classList().length) S.classe = classList()[0];
+    S.ready.classes = true; render();
+  });
+  S.store.watch("events", docs => { S.events = docs; render(); renderSheet(); });
+  S.store.watch("appel", docs => { const m = {}; docs.forEach(d => m[d.id] = d); S.appel = m; render(); });
+  S.store.watch("profs", docs => { S.profs = docs; if (S.tab === "reglages") render(); });
+}
+function presence() { if (S.store && S.sortieId) S.store.set("profs", S.me.uid, { prenom: S.me.prenom, ts: Date.now(), sortieId: S.sortieId }); }
+
+function seedDemo() {
+  if (LS.get("cac_demo_classes", null)) return;
+  const FN = ["Lina", "Hugo", "Inès", "Nathan", "Jade", "Adam", "Chloé", "Rayan", "Léa", "Louis", "Manon", "Yanis", "Sarah", "Tom", "Camille", "Ethan", "Zoé", "Noah", "Alice", "Sacha", "Lou", "Gabriel", "Nina", "Arthur", "Maya", "Paul", "Rose", "Jules"];
+  const LN = ["ARNAUD", "BERNARD", "CARON", "DUBOIS", "ETIENNE", "FABRE", "GARNIER", "HENRY", "IMBERT", "JOLY", "KLEIN", "LEROY", "MOREAU", "NOEL", "OLIVIER", "PERRIN", "QUENTIN", "ROUX", "SIMON", "TESSIER", "URBAIN", "VIDAL", "WEBER", "XAVIER", "YVON", "ZIMMER", "BLANC", "COLIN"];
+  const mk = (cl, f) => LN.map((n, i) => ({ nom: n, prenom: FN[f(i)] })).sort((a, b) => a.nom.localeCompare(b.nom)).map(e => ({ id: cl + "_" + slug(e.nom + "-" + e.prenom), ...e }));
+  S.store.set("classes", "6A", { eleves: mk("6A", i => i) });
+  S.store.set("classes", "6B", { eleves: mk("6B", i => (i * 5 + 3) % 28) });
+}
+
+/* ------------------------------- rendu --------------------------------- */
+function render() {
+  if (!S.store || !S.ready.config) return;
+  const a = document.activeElement;
+  if (S.tab === "reglages" && a && a.matches("input,textarea") && $("#app").contains(a)) { S.pending = true; return; }
+  const v = { noter: vNoter, appel: vAppel, bilan: vBilan, reglages: vReglages }[S.tab]();
+  $("#app").innerHTML = header() + `<main>${v}</main>` + navbar();
+}
+addEventListener("focusout", () => setTimeout(() => { if (S.pending) { S.pending = false; render(); } }, 400));
+
+function header() {
+  const ss = S.settings.sorties;
+  const showSeg = ["noter", "appel", "bilan"].includes(S.tab) && classList().length > 1;
+  return `<header>
+    <div class="top"><div class="brand">🎬 Échappées<small>6e</small></div>
+      <button class="who" data-a="tab" data-v="reglages">${DEMO ? '<span class="demo">DÉMO</span>' : ""}${esc(S.me.prenom)}${isRef() ? " ⭐" : ""}</button></div>
+    <div class="chips">${ss.map((s, i) => `<button class="chip ${s.id === S.sortieId ? "on" : ""}" data-a="sortie" data-v="${s.id}">${i + 1} · ${esc(s.titre)}<span>${fmtD(s.date)}</span></button>`).join("")}</div>
+    ${showSeg ? `<div class="seg">${classList().map(c => `<button class="${c === S.classe ? "on" : ""}" data-a="classe" data-v="${esc(c)}">${esc(c)}</button>`).join("")}</div>` : ""}
+  </header>`;
+}
+function navbar() {
+  const t = [["noter", "⚖️", "Noter"], ["appel", "✅", "Appel"], ["bilan", "📊", "Bilan"], ["reglages", "⚙️", "Réglages"]];
+  return `<nav>${t.map(([k, i, l]) => `<button class="${S.tab === k ? "on" : ""}" data-a="tab" data-v="${k}"><span class="i">${i}</span>${l}</button>`).join("")}</nav>`;
+}
+function noClass() {
+  if (!S.ready.classes) return `<p class="empty">Chargement des classes…</p>`;
+  return `<div class="empty"><div style="font-size:34px">📋</div><p>Aucune liste de classe pour l'instant.</p>
+    <p class="mut">${isRef() ? "Importez les listes dans Réglages." : `Le référent (${esc(S.settings.referent)}) doit importer les listes dans Réglages.`}</p>
+    ${isRef() ? `<button class="btn acc" data-a="tab" data-v="reglages">Aller aux réglages</button>` : ""}</div>`;
+}
+
+/* ---- Noter ---- */
+function vNoter() {
+  const el = eleves(S.classe); if (!el.length) return noClass();
+  const sm = scoreMap(e => e.sortieId === S.sortieId);
+  const evs = S.events.filter(e => e.sortieId === S.sortieId && e.classe === S.classe && isNote(e));
+  const nP = evs.filter(e => e.pts > 0).length, nM = evs.length - nP;
+  const jourJ = sortie().date === todayISO();
+  return `${jourJ ? `<div class="daywarn">📶 Jour de sortie : gardez l'appli ouverte, les notes partiront dès que le réseau revient.</div>` : ""}<div class="hint"><span>Touchez un élève pour noter</span><span><b class="tp">${nP}</b> bonus · <b class="tm">${nM}</b> malus</span></div>
+  <div class="grid">${el.map(e => {
+    const s = sm[e.id], t = s ? s.plus + s.minus : 0;
+    const abs = appelRec(S.sortieId, "aller", e.id)?.statut === "absent";
+    return `<button class="st ${abs ? "abs" : ""}" data-a="eleve" data-v="${e.id}"><b>${esc(e.prenom)}</b><small>${esc(e.nom)}</small>${s && s.nP + s.nM ? `<span class="sc ${cls(t)}">${sgn(t)}</span>` : s?.nC ? `<span class="sc zer">💬</span>` : ""}</button>`;
+  }).join("")}</div>`;
+}
+function openSheet(id) { S.sheetEleve = id; S.comT = ""; $("#sheet").classList.add("open"); renderSheet(); }
+function closeSheet() { S.sheetEleve = null; $("#sheet").classList.remove("open"); $("#sheet").innerHTML = ""; }
+function renderSheet() {
+  if (!S.sheetEleve) return;
+  if (document.activeElement && document.activeElement.id === "comT") return; // ne pas effacer pendant la saisie
+  const e = eleveById(S.sheetEleve); if (!e) return closeSheet();
+  const acts = S.settings.actions;
+  const evs = S.events.filter(x => x.eleveId === e.id && x.sortieId === S.sortieId).sort((a, b) => b.ts - a.ts);
+  const t = evs.reduce((a, x) => a + (isNote(x) ? x.pts : 0), 0);
+  const nb = evs.filter(isNote).length, n = note20(e.id, S.sortieId);
+  const btn = a => `<button class="ab ${a.type === "+" ? "p" : "m"}" data-a="act" data-v="${a.id}"><span>${esc(a.label)}</span><span class="pt">${a.type === "+" ? "+" : "−"}${a.pts}</span></button>`;
+  const sc = $(".spn")?.scrollTop || 0;
+  $("#sheet").innerHTML = `<div class="sbg" data-a="closeSheet"></div><div class="spn">
+    <div class="shh"><div><div class="nm">${esc(e.prenom)} <span>${esc(e.nom)}</span></div><div class="mut">${esc(e.classe)} · ${esc(sortie().titre)}</div></div>
+      <span class="sc big ${cls(t)}">${nb ? sgn(t) : "0"}</span><span class="n20"><b class="${c20(n)}">${f20(n)}</b>${n == null ? "" : "/20"}</span><button class="x" data-a="closeSheet" aria-label="Fermer">✕</button></div>
+    <div class="acts">
+      <div class="acol"><div class="ch tp">Bonus</div>${acts.filter(a => a.type === "+").map(btn).join("")}</div>
+      <div class="acol"><div class="ch tm">Malus</div>${acts.filter(a => a.type === "-").map(btn).join("")}</div>
+    </div>
+    <div class="com"><textarea id="comT" data-in="comT" rows="2" placeholder="Commentaire libre (facultatif)…">${esc(S.comT)}</textarea><button class="btn" data-a="comment">💬 Enregistrer le commentaire</button></div>
+    ${evs.length ? `<div class="hist"><div class="ch">Notes de cette sortie</div>${evs.map(x => `<div class="hr"><span class="v ${!isNote(x) ? "" : x.pts > 0 ? "tp" : "tm"}">${isNote(x) ? sgn(x.pts) : "💬"}</span><span class="hl">${esc(x.label)}<small>${esc(x.prof)} · ${hm(x.ts)}</small></span>${canDel(x) ? `<button class="del" data-a="delEv" data-v="${x.id}" aria-label="Supprimer">🗑</button>` : ""}</div>`).join("")}</div>` : ""}
+  </div>`;
+  if (sc) $(".spn").scrollTop = sc;
+}
+async function addComment() {
+  const e = eleveById(S.sheetEleve), txt = (S.comT || "").trim();
+  if (!e) return;
+  if (!txt) { toast("Écrivez d'abord le commentaire."); $("#comT")?.focus(); return; }
+  const ev = { kind: "comment", sortieId: S.sortieId, classe: e.classe, eleveId: e.id, nom: e.nom, prenom: e.prenom, actionId: null, label: txt, pts: 0, prof: S.me.prenom, uid: S.me.uid, ts: Date.now() };
+  S.comT = ""; closeSheet();
+  const id = await S.store.add("events", ev);
+  toast(`💬 Commentaire pour ${e.prenom}`, "Annuler", () => S.store.del("events", id));
+}
+async function record(actId) {
+  const e = eleveById(S.sheetEleve), a = S.settings.actions.find(x => x.id === actId);
+  if (!e || !a) return;
+  const pts = a.type === "+" ? Math.abs(a.pts) : -Math.abs(a.pts);
+  const ev = { sortieId: S.sortieId, classe: e.classe, eleveId: e.id, nom: e.nom, prenom: e.prenom, actionId: a.id, label: a.label, pts, prof: S.me.prenom, uid: S.me.uid, ts: Date.now() };
+  closeSheet();
+  const id = await S.store.add("events", ev);
+  try { navigator.vibrate && navigator.vibrate(25); } catch (x) {}
+  toast(`${sgn(pts)} ${e.prenom} · ${a.label}`, "Annuler", () => S.store.del("events", id));
+}
+
+/* ---- Appel ---- */
+function vAppel() {
+  const el = eleves(S.classe); if (!el.length) return noClass();
+  const cp = S.checkpoint;
+  let p = 0, a = 0;
+  el.forEach(e => { const s = appelRec(S.sortieId, cp, e.id)?.statut; if (s === "present") p++; else if (s === "absent") a++; });
+  const left = el.length - p - a;
+  const list = S.onlyLeft ? el.filter(e => !appelRec(S.sortieId, cp, e.id)) : el;
+  const prevCp = cp === "aller" ? null : (cp === "cinema" ? "aller" : "cinema");
+  return `<div class="seg" style="margin-top:0">${CHECKPOINTS.map(([k, l]) => `<button class="${k === cp ? "on" : ""}" data-a="cp" data-v="${k}">${l}</button>`).join("")}</div>
+  <div class="stats"><div class="stat okc"><b>${p}</b>présents</div><div class="stat koc"><b>${a}</b>absents</div><div class="stat"><b>${left}</b>à pointer</div></div>
+  <button class="toggle ${S.onlyLeft ? "on" : ""}" data-a="onlyLeft">${S.onlyLeft ? "☑" : "☐"} Afficher seulement les élèves à pointer</button>
+  ${list.map(e => {
+    const r = appelRec(S.sortieId, cp, e.id), s = r?.statut;
+    const absBefore = prevCp && ["aller", "cinema"].some(k => appelRec(S.sortieId, k, e.id)?.statut === "absent");
+    return `<div class="row ${s || ""}">
+      <button class="n" data-a="appel" data-v="${e.id}|present"><b>${esc(e.prenom)} <span>${esc(e.nom)}</span>${absBefore ? '<span class="tag">ABS. AVANT</span>' : ""}</b>
+      <small>${r ? `${s === "present" ? "Présent" : "Absent"} · ${esc(r.prof)} ${hm(r.ts)}` : "Touchez le nom = présent"}</small></button>
+      <button class="pb ok ${s === "present" ? "on" : ""}" data-a="appel" data-v="${e.id}|present" aria-label="Présent">✓</button>
+      <button class="pb ko ${s === "absent" ? "on" : ""}" data-a="appel" data-v="${e.id}|absent" aria-label="Absent">✗</button>
+    </div>`;
+  }).join("")}
+  ${!list.length ? `<p class="empty">Tout le monde est pointé 🎉</p>` : ""}`;
+}
+function setAppel(v) {
+  const [eid, st] = v.split("|"), e = eleveById(eid); if (!e) return;
+  const id = `${S.sortieId}_${S.checkpoint}_${eid}`, cur = S.appel[id];
+  if (cur?.statut === st) S.store.del("appel", id);
+  else S.store.set("appel", id, { sortieId: S.sortieId, checkpoint: S.checkpoint, eleveId: eid, classe: e.classe, statut: st, prof: S.me.prenom, ts: Date.now() });
+  try { navigator.vibrate && navigator.vibrate(15); } catch (x) {}
+}
+
+/* ---- Bilan ---- */
+function vBilan() {
+  const el = eleves(S.classe); if (!el.length) return noClass();
+  const year = S.bilanScope === "annee", ss = S.settings.sorties;
+  const f = e => e.classe === S.classe && (year || e.sortieId === S.sortieId);
+  const sm = scoreMap(f);
+  const evs = S.events.filter(f), notes = evs.filter(isNote);
+  const tot = id => { const s = sm[id]; return s ? s.plus + s.minus : 0; };
+  let rows = [...el];
+  if (S.bilanSort === "pts") rows.sort((a, b) => tot(b.id) - tot(a.id));
+  if (S.bilanSort === "neg") rows.sort((a, b) => tot(a.id) - tot(b.id));
+  const noteOf = e => year ? moyenne(e.id) : note20(e.id, S.sortieId);
+  if (S.bilanSort === "pts") rows.sort((a, b) => (noteOf(b) ?? -1) - (noteOf(a) ?? -1) || tot(b.id) - tot(a.id));
+  if (S.bilanSort === "neg") rows.sort((a, b) => (noteOf(a) ?? 99) - (noteOf(b) ?? 99) || tot(a.id) - tot(b.id));
+  const byProf = {}; evs.forEach(e => byProf[e.prof] = (byProf[e.prof] || 0) + 1);
+  const nP = notes.filter(e => e.pts > 0).length;
+  const vals = el.map(noteOf).filter(v => v != null);
+  const moyC = (year ? ss.some(sortieFaite) : true) && vals.length ? f20(Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10) : "–";
+  const n = S.settings.note20 || DEFAULT_SETTINGS.note20;
+  const cols = year ? ss.map((s, i) => `<th>S${i + 1}</th>`).join("") + "<th>Moy.</th>" : "<th>+</th><th>−</th><th>Pts</th><th>/20</th>";
+  return `<div class="seg" style="margin-top:0"><button class="${!year ? "on" : ""}" data-a="scope" data-v="sortie">Cette sortie</button><button class="${year ? "on" : ""}" data-a="scope" data-v="annee">Année (3 sorties)</button></div>
+  <div class="stats"><div class="stat okc"><b>${nP}</b>bonus</div><div class="stat koc"><b>${notes.length - nP}</b>malus</div><div class="stat"><b>${moyC}</b>moyenne /20</div></div>
+  <p class="mut" style="margin:0 2px 8px">Note /20 = ${n.base} ${n.coef === 1 ? "+ points" : `+ points × ${String(n.coef).replace(".", ",")}`}, entre 0 et 20 · ABS = absent à l'aller${year ? " · moyenne des sorties passées" : ""}</p>
+  ${Object.keys(byProf).length ? `<p class="mut" style="margin:0 2px 10px">Notes par : ${Object.entries(byProf).sort((a, b) => b[1] - a[1]).map(([p, n]) => `${esc(p)} (${n})`).join(" · ")}</p>` : ""}
+  <div class="seg" style="margin:0 0 10px"><button class="${S.bilanSort === "nom" ? "on" : ""}" data-a="sort" data-v="nom">A → Z</button><button class="${S.bilanSort === "pts" ? "on" : ""}" data-a="sort" data-v="pts">Meilleures notes</button><button class="${S.bilanSort === "neg" ? "on" : ""}" data-a="sort" data-v="neg">À surveiller</button></div>
+  <div class="card" style="padding:6px 10px"><table class="btbl"><thead><tr><th>Élève</th>${cols}</tr></thead><tbody>
+  ${rows.map(e => {
+    const s = sm[e.id], t = tot(e.id);
+    const abs = !year && appelRec(S.sortieId, "aller", e.id)?.statut === "absent";
+    const nums = year ? ss.map(x => { if (!sortieFaite(x)) return `<td class="mut">·</td>`; const v = note20(e.id, x.id); return `<td class="${c20(v)}">${f20(v)}</td>`; }).join("")
+      : `<td class="tp">${s?.plus ? "+" + s.plus : "·"}</td><td class="tm">${s?.minus ? sgn(s.minus) : "·"}</td><td class="${t > 0 ? "tp" : t < 0 ? "tm" : "mut"}">${s && s.nP + s.nM ? sgn(t) : "0"}</td>`;
+    const nv = noteOf(e);
+    let det = "";
+    if (S.expanded === e.id) {
+      const list = evs.filter(x => x.eleveId === e.id).sort((a, b) => a.ts - b.ts);
+      det = `<tr class="det"><td colspan="${year ? ss.length + 2 : 5}">${list.length ? list.map(x => `<div><b class="${!isNote(x) ? "" : x.pts > 0 ? "tp" : "tm"}">${isNote(x) ? sgn(x.pts) : "💬"}</b> ${esc(x.label)} — ${esc(x.prof)}${year ? ", " + esc((ss.find(y => y.id === x.sortieId) || {}).titre || "") : ""} ${hm(x.ts)}</div>`).join("") : "Aucune note."}</td></tr>`;
+    }
+    return `<tr class="r" data-a="expand" data-v="${e.id}"><td>${esc(e.prenom)} <small>${esc(e.nom)}</small>${s?.nC ? " 💬" : ""}</td>${nums}<td class="t ${c20(nv)}">${year && nv == null ? "–" : f20(nv)}</td></tr>${det}`;
+  }).join("")}
+  </tbody></table></div>
+  <div class="btns"><button class="btn" data-a="csvTot">⬇︎ Export totaux (CSV)</button><button class="btn" data-a="csvDet">⬇︎ Export détaillé (CSV)</button></div>
+  <p class="mut">Les exports contiennent les deux classes et les trois sorties ; ils s'ouvrent dans Excel.</p>`;
+}
+function dl(name, rows) {
+  const csv = "﻿" + rows.map(r => r.map(c => { c = String(c ?? ""); return /[;"\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(";")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+function csvTot() {
+  const ss = S.settings.sorties, num = v => v == null ? "ABS" : String(v).replace(".", ",");
+  const rows = [["Classe", "Nom", "Prénom", ...ss.flatMap((s, i) => [`S${i + 1} ${s.titre} (points)`, `S${i + 1} ${s.titre} (/20)`]), "Moyenne /20", "Nb bonus", "Nb malus", "Nb commentaires", "Absences (aller)"]];
+  const sm = scoreMap(() => true);
+  classList().forEach(cl => eleves(cl).forEach(e => {
+    const s = sm[e.id];
+    rows.push([cl, e.nom, e.prenom, ...ss.flatMap(x => sortieFaite(x) ? [s?.bySortie[x.id] || 0, num(note20(e.id, x.id))] : ["", ""]), moyenne(e.id) == null ? "" : num(moyenne(e.id)), s?.nP || 0, s?.nM || 0, s?.nC || 0, ss.filter(x => appelRec(x.id, "aller", e.id)?.statut === "absent").length]);
+  }));
+  dl("bilan_totaux_cinema_6e.csv", rows);
+}
+function csvDet() {
+  const ss = S.settings.sorties, rows = [["Sortie", "Date", "Classe", "Nom", "Prénom", "Action", "Points", "Enseignant", "Heure"]];
+  const order = Object.fromEntries(ss.map((s, i) => [s.id, i]));
+  [...S.events].sort((a, b) => (order[a.sortieId] - order[b.sortieId]) || a.classe.localeCompare(b.classe) || (a.nom || "").localeCompare(b.nom || "") || a.ts - b.ts)
+    .forEach(e => { const s = ss.find(x => x.id === e.sortieId) || {}; const el = eleveById(e.eleveId) || e; rows.push([s.titre, s.date, e.classe, el.nom, el.prenom, isNote(e) ? e.label : "Commentaire : " + e.label, isNote(e) ? e.pts : "", e.prof, hm(e.ts)]); });
+  dl("bilan_detail_cinema_6e.csv", rows);
+}
+
+/* ---- Réglages ---- */
+function vReglages() {
+  const r = isRef(), dis = r ? "" : "disabled", st = S.settings;
+  const today = new Date().toDateString();
+  const profs = [...S.profs].sort((a, b) => b.ts - a.ts);
+  const aRow = a => `<div class="arow"><input data-c="aLabel" data-v="${a.id}" value="${esc(a.label)}" ${dis}>
+    <div class="step"><button data-a="aPts" data-v="${a.id}|-1" ${dis}>−</button><b class="${a.type === "+" ? "tp" : "tm"}">${a.pts}</b><button data-a="aPts" data-v="${a.id}|1" ${dis}>+</button></div>
+    ${r ? `<button class="del" data-a="aDel" data-v="${a.id}" aria-label="Supprimer">🗑</button>` : ""}</div>`;
+  return `
+  <section class="card"><h3>Mon profil</h3>
+    <p style="margin:0 0 4px"><b style="font-size:17px">${esc(S.me.prenom)}</b> ${r ? "· référent ⭐" : ""}</p>
+    <p class="mut" style="margin:0">${DEMO ? "Mode démo : les données restent sur cet appareil." : "Espace partagé : " + esc(S.me.code.slice(0, 3)) + "•••••"}</p>
+    <div class="btns"><button class="btn acc" data-a="share">📤 Inviter un collègue</button><button class="btn" data-a="logout">Changer de prénom</button></div>
+  </section>
+  <section class="card"><h3>Enseignants connectés</h3>
+    ${profs.length ? `<div class="pchips">${profs.map(p => `<span class="pchip ${new Date(p.ts).toDateString() === today ? "now" : ""}">${esc(p.prenom)}${norm(p.prenom) === norm(st.referent) ? " ⭐" : ""} <span class="mut">${new Date(p.ts).toDateString() === today ? hm(p.ts) : fmtD(new Date(p.ts).toISOString().slice(0, 10))}</span></span>`).join("")}</div>` : `<p class="mut">Personne pour l'instant.</p>`}
+    <p class="mut" style="margin-bottom:0">Contour vert = connecté aujourd'hui.</p>
+  </section>
+  <section class="card"><h3>Barème des actions</h3>
+    ${r ? `<p class="mut" style="margin-top:0">Les modifications s'appliquent aux prochaines notes. Les notes déjà données gardent leurs points.</p>` : `<p class="warn">Seul le référent (${esc(st.referent)}) peut modifier le barème.</p>`}
+    <h4 class="tp">Bonus</h4>${st.actions.filter(a => a.type === "+").map(aRow).join("")}
+    ${r ? `<button class="btn sm" data-a="aAdd" data-v="+">+ Ajouter un bonus</button>` : ""}
+    <h4 class="tm">Malus</h4>${st.actions.filter(a => a.type === "-").map(aRow).join("")}
+    ${r ? `<button class="btn sm" data-a="aAdd" data-v="-">+ Ajouter un malus</button>
+    <div class="btns"><button class="btn danger sm" data-a="aReset">Rétablir le barème par défaut</button></div>` : ""}
+  </section>
+  <section class="card"><h3>Note sur 20 (par sortie)</h3>
+    <div class="arow"><span style="flex:1">Note de départ</span><div class="step"><button data-a="n20" data-v="base|-1" ${dis}>−</button><b>${st.note20.base}</b><button data-a="n20" data-v="base|1" ${dis}>+</button></div></div>
+    <div class="arow"><span style="flex:1">Valeur d'un point</span><div class="step"><button data-a="n20" data-v="coef|-1" ${dis}>−</button><b>${String(st.note20.coef).replace(".", ",")}</b><button data-a="n20" data-v="coef|1" ${dis}>+</button></div></div>
+    <p class="mut" style="margin-bottom:0">Note = ${st.note20.base} + points × ${String(st.note20.coef).replace(".", ",")}, entre 0 et 20. Exemple : un élève avec un malus −2 et un bonus +1 obtient ${f20(Math.max(0, Math.min(20, st.note20.base - st.note20.coef)))}/20. Un élève absent n'a pas de note.</p>
+  </section>
+  <section class="card"><h3>Les 3 sorties</h3>
+    ${st.sorties.map((s, i) => `<div class="frow"><span>${i + 1}</span><input data-c="sTitre" data-v="${i}" value="${esc(s.titre)}" ${dis}><input type="date" data-c="sDate" data-v="${i}" value="${esc(s.date)}" ${dis}></div>`).join("")}
+  </section>
+  <section class="card"><h3>Listes de classe</h3>
+    ${classList().length ? classList().map(c => `<div class="frow" style="justify-content:space-between"><span style="width:auto;color:var(--tx)">${esc(c)}</span><span class="mut" style="flex:1;font-weight:400">${eleves(c).length} élèves</span>${r ? `<button class="btn sm danger" style="margin:0" data-a="clsDel" data-v="${esc(c)}">Supprimer</button>` : ""}</div>`).join("") : `<p class="mut">Aucune classe importée.</p>`}
+    ${r ? `<h4>Importer / remplacer une liste</h4>
+      <p class="mut" style="margin-top:0">Copiez les colonnes <b>Nom</b> et <b>Prénom</b> depuis Excel et collez-les ci-dessous (une ligne par élève), ou choisissez le fichier CSV exporté.</p>
+      <div class="frow"><input id="impC" data-in="impC" placeholder="Classe (ex. 6A)" value="${esc(S.impC)}" style="flex:0 0 120px"><input type="file" id="impF" accept=".csv,.txt,text/csv,text/plain" style="flex:1;font-size:12px"></div>
+      <textarea id="impT" data-in="impT" rows="5" placeholder="ALIOUAT&#9;Léhana&#10;AUDIC&#9;Valentine&#10;…">${esc(S.impT)}</textarea>
+      <div class="btns"><button class="btn acc" data-a="import">Importer la liste</button></div>` : ""}
+  </section>
+  <section class="card"><h3>Enseignant référent</h3>
+    <input data-c="ref" value="${esc(st.referent)}" ${dis}>
+    <p class="mut" style="margin-bottom:0">Le référent peut modifier le barème, les sorties, les listes, et supprimer n'importe quelle note.</p>
+  </section>
+  ${DEMO ? `<section class="card"><h3>Démo</h3><button class="btn danger" data-a="demoReset">Effacer toutes les données de démo</button></section>` : ""}
+  <p class="mut" style="text-align:center">Échappées · Collège au cinéma 2026-2027</p>`;
+}
+function saveSettings() { S.store.set("config", "settings", { referent: S.settings.referent, note20: S.settings.note20, sorties: S.settings.sorties, actions: S.settings.actions }); }
+
+function parseList(txt) {
+  const out = [];
+  txt.split(/\r?\n/).forEach((line, i) => {
+    line = line.trim(); if (!line) return;
+    let cells = line.split(/\t|;|,/).map(c => c.replace(/^"|"$/g, "").trim()).filter(Boolean);
+    if (i === 0 && cells.length && norm(cells[0]) === "nom") return;
+    let nom, prenom;
+    if (cells.length >= 2) { [nom, prenom] = cells; }
+    else {
+      const t = line.split(/\s+/); const k = t.findIndex(w => w !== w.toUpperCase());
+      if (k <= 0) return; nom = t.slice(0, k).join(" "); prenom = t.slice(k).join(" ");
+    }
+    if (!nom || !prenom) return;
+    nom = nom.toUpperCase();
+    out.push({ nom, prenom });
+  });
+  return out;
+}
+async function doImport() {
+  if (!isRef()) return;
+  const cl = (S.impC || "").trim().toUpperCase();
+  if (!cl) return toast("Indiquez le nom de la classe (ex. 6A).");
+  const list = parseList(S.impT || "");
+  if (!list.length) return toast("Aucun élève reconnu dans le texte collé.");
+  if (!await ask(`${S.classes[cl] ? "Remplacer" : "Créer"} la classe ${cl} avec ${list.length} élèves ?\n\nPremier : ${list[0].nom} ${list[0].prenom}\nDernier : ${list[list.length - 1].nom} ${list[list.length - 1].prenom}`)) return;
+  const el = list.sort((a, b) => a.nom.localeCompare(b.nom)).map(e => ({ id: cl + "_" + slug(e.nom + "-" + e.prenom), ...e }));
+  S.store.set("classes", cl, { eleves: el });
+  S.impC = ""; S.impT = ""; S.classe = cl;
+  toast(`✓ ${cl} importée (${el.length} élèves)`);
+}
+async function share() {
+  const url = location.origin + location.pathname + (DEMO ? "" : "#k=" + encodeURIComponent(S.me.code));
+  const text = "Sortie cinéma 6e : ouvre ce lien et entre simplement ton prénom pour noter les élèves et faire l'appel.";
+  try { if (navigator.share) { await navigator.share({ title: "Échappées · Sorties cinéma", text, url }); return; } } catch (e) { if (e.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(text + "\n" + url); toast("Lien copié ✓ — collez-le dans un SMS ou un mail"); }
+  catch (e) { await askText("Copiez ce lien et envoyez-le :", url); }
+}
+
+/* ------------------- fenêtres de confirmation intégrées ------------------- */
+function dialog(msg, withInput, def) {
+  return new Promise(res => {
+    const d = $("#dlg");
+    d.innerHTML = `<div class="dbox"><p>${esc(msg).replace(/\n/g, "<br>")}</p>${withInput ? `<input id="dlgIn" value="${esc(def || "")}">` : ""}
+      <div class="btns" style="justify-content:flex-end"><button class="btn" id="dlgNo">Annuler</button><button class="btn acc" id="dlgOk">OK</button></div></div>`;
+    d.classList.add("open");
+    const inp = $("#dlgIn"); if (inp) { inp.focus(); inp.select(); }
+    const end = v => { d.classList.remove("open"); d.innerHTML = ""; res(v); };
+    $("#dlgNo").onclick = () => end(withInput ? null : false);
+    $("#dlgOk").onclick = () => end(withInput ? $("#dlgIn").value : true);
+    if (inp) inp.onkeydown = e => { if (e.key === "Enter") end(inp.value); };
+  });
+}
+const ask = msg => dialog(msg, false);
+const askText = (msg, def) => dialog(msg, true, def);
+
+/* ------------------------------- toast --------------------------------- */
+let tT;
+function toast(msg, btnLabel, fn) {
+  const t = $("#toast"); $("#tmsg").textContent = msg;
+  const b = $("#tbtn"); b.textContent = btnLabel || ""; b.style.display = btnLabel ? "" : "none";
+  b.onclick = () => { t.classList.remove("show"); fn && fn(); };
+  t.classList.add("show"); clearTimeout(tT); tT = setTimeout(() => t.classList.remove("show"), btnLabel ? 5000 : 2600);
+}
+
+/* ---------------------------- interactions ----------------------------- */
+const H = {
+  tab: v => { S.tab = v; S.expanded = null; render(); scrollTo(0, 0); },
+  sortie: v => { S.sortieId = v; presence(); render(); },
+  classe: v => { S.classe = v; LS.set("cac_classe", v); S.expanded = null; render(); },
+  eleve: v => openSheet(v),
+  act: v => record(v),
+  comment: () => addComment(),
+  n20: v => { if (!isRef()) return; const [k, d] = v.split("|"); const n = S.settings.note20 = { ...DEFAULT_SETTINGS.note20, ...S.settings.note20 };
+    if (k === "base") n.base = Math.min(20, Math.max(0, n.base + +d));
+    else { const steps = [0.25, 0.5, 1, 1.5, 2, 3]; const i = Math.max(0, steps.indexOf(n.coef)); n.coef = steps[Math.min(steps.length - 1, Math.max(0, i + +d))]; }
+    saveSettings(); render(); },
+  closeSheet: () => closeSheet(),
+  delEv: async v => { if (await ask("Supprimer cette note ?")) S.store.del("events", v); },
+  cp: v => { S.checkpoint = v; render(); },
+  appel: v => setAppel(v),
+  onlyLeft: () => { S.onlyLeft = !S.onlyLeft; render(); },
+  scope: v => { S.bilanScope = v; S.expanded = null; render(); },
+  sort: v => { S.bilanSort = v; render(); },
+  expand: v => { S.expanded = S.expanded === v ? null : v; render(); },
+  csvTot, csvDet, share, import: doImport,
+  logout: async () => { if (await ask("Changer de prénom sur ce téléphone ?")) { S.me = { code: S.me.code }; LS.set("cac_me", S.me); location.reload(); } },
+  aPts: v => { if (!isRef()) return; const [id, d] = v.split("|"); const a = S.settings.actions.find(x => x.id === id); a.pts = Math.min(10, Math.max(1, a.pts + +d)); saveSettings(); render(); },
+  aDel: async v => { if (!isRef()) return; const a = S.settings.actions.find(x => x.id === v); if (await ask(`Supprimer « ${a.label} » du barème ?`)) { S.settings.actions = S.settings.actions.filter(x => x.id !== v); saveSettings(); render(); } },
+  aAdd: async t => { if (!isRef()) return; const label = await askText(t === "+" ? "Nouveau bonus :" : "Nouveau malus :"); if (!label || !label.trim()) return; S.settings.actions.push({ id: (t === "+" ? "b" : "m") + uid8(), type: t, label: label.trim(), pts: 1 }); saveSettings(); render(); },
+  aReset: async () => { if (isRef() && await ask("Remettre le barème d'origine ?")) { S.settings.actions = clone(DEFAULT_SETTINGS.actions); saveSettings(); render(); } },
+  clsDel: async v => { if (isRef() && await ask(`Supprimer la liste ${v} ? (les notes déjà données sont conservées)`)) S.store.del("classes", v); },
+  demoReset: async () => { if (await ask("Effacer toutes les données de démo ?")) { S.store.reset(); location.reload(); } }
+};
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-a]"); if (!t || t.disabled) return;
+  const f = H[t.dataset.a]; if (f) { e.preventDefault(); f(t.dataset.v, t, e); }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.id === "impF" && t.files[0]) {
+    const rd = new FileReader();
+    rd.onload = () => { S.impT = String(rd.result); const ta = $("#impT"); if (ta) ta.value = S.impT; const m = t.files[0].name.match(/6\s?[A-Z]/i); if (m && !S.impC) { S.impC = m[0].replace(/\s/, "").toUpperCase(); const c = $("#impC"); if (c) c.value = S.impC; } };
+    rd.readAsText(t.files[0], "utf-8"); return;
+  }
+  const c = t.dataset.c; if (!c || !isRef()) return;
+  const v = t.dataset.v, st = S.settings;
+  if (c === "aLabel") { const a = st.actions.find(x => x.id === v); if (a && t.value.trim()) a.label = t.value.trim(); }
+  if (c === "sTitre" && t.value.trim()) st.sorties[+v].titre = t.value.trim();
+  if (c === "sDate" && t.value) st.sorties[+v].date = t.value;
+  if (c === "ref" && t.value.trim()) st.referent = t.value.trim();
+  saveSettings(); toast("Enregistré ✓");
+});
+document.addEventListener("input", e => { const k = e.target.dataset.in; if (k) S[k] = e.target.value; });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+const net = () => $("#net").classList.toggle("show", !navigator.onLine);
+addEventListener("online", net); addEventListener("offline", net); net();
+
+/* hors-ligne : met la page en cache pour pouvoir la rouvrir sans réseau */
+if ("serviceWorker" in navigator && location.protocol === "https:" && !DEMO) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+/* ------------------------------ lancement ------------------------------ */
+const hk = hashCode();
+if (hk && S.me && S.me.code !== hk) { S.me.code = hk; LS.set("cac_me", S.me); }
+if (!S.me || !S.me.prenom || (!DEMO && !S.me.code)) renderLogin(); else start();
+</script>
+</body>
+</html>
